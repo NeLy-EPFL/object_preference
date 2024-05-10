@@ -6,9 +6,9 @@ import sys
 import shutil
 import numpy as np
 
-data_folder = Path("/home/matthias/Videos/Alice_Samara_cropped/mazes_experiment1_Cropped_Checked")
+data_folder = Path("/home/matthias/Videos/Alice_Samara_cropped2")
 output_path = Path(
-    "/home/matthias/Videos/Alice_Samara_Videos/"
+    "/home/matthias/Videos/Alice_Samara_Videos2/"
 )
 
 fps = "29"
@@ -31,7 +31,7 @@ def create_video_from_images(images_folder, output_folder, video_name, fps):
     video_path = output_folder / f"{video_name}.mp4"
     
     if not video_path.exists():
-        terminal_call = f"/usr/bin/ffmpeg -hwaccel cuda -r {fps} -i {images_folder.as_posix()}/image%d.jpg -vf \"scale=-2:-2\" -pix_fmt yuv420p -c:v libx265 -crf 15 {video_path.as_posix()}"
+        terminal_call = f"/usr/bin/ffmpeg -hwaccel cuda -r {fps} -i {images_folder.as_posix()}/image%d.jpg -pix_fmt yuv420p -c:v libx265 -crf 15 {video_path.as_posix()}"
         subprocess.run(terminal_call, shell=True)
         return True
     else:
@@ -39,6 +39,7 @@ def create_video_from_images(images_folder, output_folder, video_name, fps):
 
 
 # -loglevel panic -nostats >  This is to remove the output of the ffmpeg command from the terminal, to add right after the ffmpeg command
+# \"scale=-2:-2\"
 
 
 def search_folder_for_images(folder_path, output_folder, fps):
@@ -91,7 +92,12 @@ for folder in data_folder.iterdir():
         print(f"Processing of {folder.name} complete.")
         new_output_folder_name = f"{output_folder_name}_Videos"
         new_output_folder = output_path / new_output_folder_name
-        shutil.move(processing_output_folder.as_posix(), new_output_folder.as_posix())
+        processing_output_folder.rename(new_output_folder)
+        
+        # print(f"Processing of {folder.name} complete.")
+        # new_output_folder_name = f"{output_folder_name}_Videos"
+        # new_output_folder = output_path / new_output_folder_name
+        # shutil.move(processing_output_folder.as_posix(), new_output_folder.as_posix())
 
 # subprocess.run(
 #     [
