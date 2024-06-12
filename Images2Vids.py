@@ -6,13 +6,15 @@ import sys
 import shutil
 import numpy as np
 
+# Define input and output paths
 data_folder = Path("/home/matthias/Videos/Alice_Samara_cropped2")
 output_path = Path(
     "/home/matthias/Videos/Alice_Samara_Videos2/"
 )
-
+# Set frames per second for the videos (the same as the original recording)
 fps = "29"
 
+# Function to check the integrity of a video using ffprobe
 def check_video_integrity(video_path):
     try:
         result = subprocess.run(
@@ -26,12 +28,15 @@ def check_video_integrity(video_path):
         print(f"Error checking video integrity: {e.stderr.decode('utf-8')}")
         return False
 
-
+# Function to create a video from images in a given folder
 def create_video_from_images(images_folder, output_folder, video_name, fps):
     video_path = output_folder / f"{video_name}.mp4"
-    
+
+    # Only create the video if it doesn't already exist
     if not video_path.exists():
+        # Construct the ffmpeg command
         terminal_call = f"/usr/bin/ffmpeg -hwaccel cuda -r {fps} -i {images_folder.as_posix()}/image%d.jpg -pix_fmt yuv420p -c:v libx265 -crf 15 {video_path.as_posix()}"
+         # Run the ffmpeg command
         subprocess.run(terminal_call, shell=True)
         return True
     else:
@@ -41,14 +46,17 @@ def create_video_from_images(images_folder, output_folder, video_name, fps):
 # -loglevel panic -nostats >  This is to remove the output of the ffmpeg command from the terminal, to add right after the ffmpeg command
 # \"scale=-2:-2\"
 
-
+# Function to search a folder for images and create videos from them
 def search_folder_for_images(folder_path, output_folder, fps):
     subdirs = []
+
+    # Recursively find all subdirectories containing jpg images
     for subdir in folder_path.glob("**/*"):
         if subdir.is_dir() and any(
             file.name.endswith(".jpg") for file in subdir.glob("*")
         ):
             subdirs.append(subdir)
+    # Progress bar for processing videos        
     with tqdm(total=len(subdirs), desc="Processing videos") as pbar:
         for subdir in subdirs:
             relative_subdir = subdir.relative_to(folder_path)
@@ -61,11 +69,13 @@ def search_folder_for_images(folder_path, output_folder, fps):
                     print(f"Video {video_name} is corrupted or too small.")
                     print(f"Removing corrupted or small video: {video_path.as_posix()}")
                     video_path.unlink()
+
+            # Create the video if it doesn't exist
             if not video_path.exists():
                 create_video_from_images(subdir, video_output_folder, video_name, fps)
             pbar.update(1)
 
-
+# Iterate over all folders in the data_folder
 for folder in data_folder.iterdir():
     if folder.is_dir():
         print(f"Processing folder: {folder.name}")
@@ -73,6 +83,8 @@ for folder in data_folder.iterdir():
         output_folder = output_path / f"{output_folder_name}"
         output_folder.mkdir(parents=True, exist_ok=True)
         processing_output_folder = output_path / f"{output_folder_name}_Processing"
+
+         # Rename output folder to indicate processing
         if not processing_output_folder.exists():
             output_folder.rename(processing_output_folder)
 
@@ -86,7 +98,8 @@ for folder in data_folder.iterdir():
         #     continue
         
         fps = "29"
-
+        
+        # Search for images and create videos
         search_folder_for_images(folder, processing_output_folder, fps)
         # Rename the output folder after all videos have been created
         print(f"Processing of {folder.name} complete.")
