@@ -1,3 +1,5 @@
+#IN THIS CODE WE CREATE VIDEOS STARTING FROM IMAGES
+
 from pathlib import Path
 from tqdm import tqdm
 import subprocess
